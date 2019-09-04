@@ -1,0 +1,571 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Untitled Document</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <style type="text/css">
+        .backImg {
+            /* height: 80px; */
+            border: 3px solid #555;
+            padding: 1px;
+            /* margin: 0 10px 10px 0; */
+        }
+        
+        .maskImg {
+            /* height: 80px; */
+            /* border: 3px solid #555; */
+            padding: 3px;
+            /* margin: 0 10px 10px 0; */
+        }
+        
+        .roomPreview {
+            border: 2px solid #555;
+            margin-top: 5px;
+        }
+        
+        .outsidebox {
+            position: absolute;
+            left: 260px;
+            top: 150px;
+            /* width: 1330px;
+            height: 520px; */
+            /* display: inline-block; */
+        }
+        
+        .tablebox {
+            position: absolute;
+            left: 1110px;
+            top: 150px;
+            /* width: 1330px;
+            height: 520px; */
+            /* display: inline-block; */
+            z-index: -1;
+            font-size: 1.4em;
+        }
+        
+        .orderbox {
+            position: absolute;
+            left: 12px;
+            top: 150px;
+            /* width: 1330px;
+            height: 520px; */
+            /* display: inline-block; */
+        }
+        
+        .searchbox {
+            position: absolute;
+            left: 260px;
+            top: 100px;
+            /* width: 1330px;
+            height: 520px; */
+            /* display: inline-block; */
+        }
+        
+        .mTitle {
+            position: absolute;
+            left: 260px;
+            top: 0px;
+            /* width: 1330px;
+            height: 520px; */
+            /* display: inline-block; */
+        }
+        
+        table {
+            border-collapse: collapse;
+            /* float: right; */
+        }
+        
+        table,
+        th,
+        td {
+            border: 2px solid #555;
+        }
+        
+        th,
+        td {
+            padding: 5px;
+            text-align: left;
+        }
+        
+        body {
+            font-family: "Arial", Times, Sans-serif;
+        }
+        
+        h1 {
+            font-weight: bold;
+            font-size: 2.5em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="mTitle">Edgewater Motel and Cottages</h1>
+    <div class="searchbox">
+        Number of people:<input type="number" class="inputnumber"> Time to check in:<input type="date" class="starttime"> Time to check out:<input type="date" class="endtime">
+        <button type="button" class="onSearch">Search</button>
+    </div>
+
+    <div class="orderbox">
+        <table class="disorder">
+            <tr>
+                <th>My waiting</th>
+                <th>Action</th>
+            </tr>
+        </table>
+        <input type="button" class="btnCheckout" value="Check out">
+        <input type="button" class="btnClearLocalData" value="ClearLocalData (Debug)">
+        <div>
+            <h5 class="costInfo"></h5>
+        </div>
+
+        <table class="finishorder">
+            <tr>
+                <th>My Bookings</th>
+            </tr>
+        </table>
+    </div>
+
+    <div class="outsidebox">
+        <img class="backImg" src="bkg.PNG" width="830" height="520" alt="bkg.png" />
+        <p id="auchor"></p>
+    </div>
+
+    <div class="tablebox">
+        <img class="exampl" src="exampl.png" alt="exampl.png">
+        <table class="disRoom">
+            <tr>
+                <th>Room<br>Number</th>
+                <th>Price</th>
+                <th>People<br>Number</th>
+                <!-- <th>Status</th> -->
+                <th>Type</th>
+            </tr>
+        </table>
+    </div>
+
+
+
+    <script>
+        $("document").ready(function() {
+
+            for (i = 0; i < coordinates.length; i++) {
+                $('<img class="maskImg" id="' + i + '" src="' + "FF0000.png" + '" alt="mask image" />')
+                    .css('top', coordinates[i].top)
+                    .css('left', coordinates[i].left)
+                    .css('width', coordinates[i].width)
+                    .css('height', coordinates[i].height)
+                    .css('position', "absolute")
+                    .appendTo('p')
+                    .mousedown(function(e) {
+
+                        var num = $(".inputnumber").val();
+                        var start = $(".starttime").val();
+                        var end = $(".endtime").val();
+
+
+                        if (("" == num) || num <= 0) {
+                            alert("Please input a validate number of people!");
+                            return;
+                        }
+                        if (("" == start) || ("" == end)) {
+                            alert("Please input Check in Date or Check out Date!");
+                            return;
+                        }
+
+                        var d1 = new Date(start.replace(/\-/g, "\/"));
+                        var d2 = new Date(end.replace(/\-/g, "\/"));
+                        if (d1 >= d2) {
+                            alert("Check out Date should bigger than Check in Date!");
+                            return;
+                        }
+
+
+                        if ("Booked" == coordinates[Number(this.id)].status) {
+                            alert("This room has already booked, please choose others!");
+                            return;
+                        }
+
+                        if (Number(this.id) >= 11) {
+                            return;
+                        }
+
+                        for (j = 0; j < orders.length; j++) {
+                            if (Number(orders[j].roomnumber) == (Number(this.id) + Number(1))) {
+                                alert("You have already selected this room!");
+                                return;
+                            }
+                        }
+
+                        var newOrder = new order((Number(this.id) + Number(1)), start, end);
+                        orders[orders.length] = newOrder;
+
+
+                        var sum = 0;
+
+                        for (j = 0; j < orders.length; j++) {
+                            var startd = orders[j].startDate;
+                            var endd = orders[j].endDate;
+
+                            var s1;
+                            s1 = new Date(startd.replace(/-/g, "/"));
+                            s2 = new Date(endd.replace(/-/g, "/"));
+                            var days = s2.getTime() - s1.getTime();
+                            var time = parseInt(days / (1000 * 60 * 60 * 24));
+
+                            sum += Number(coordinates[Number(orders[j].roomnumber) - Number(1)].cost) * Number(time);
+                        }
+
+                        $(".costInfo").text("Total cost: $" + sum);
+
+
+                        var table = $(".disorder")[0];
+                        var row = table.insertRow(-1);
+                        var cell1 = row.insertCell(0);
+                        var cell2 = row.insertCell(1);
+                        cell1.innerHTML = "roomNum: " + (Number(this.id) + Number(1)) + "<br>CheckIn: " + start + "<br>CheckOut: " + end + "<br>Price: $" + coordinates[Number(this.id)].cost;
+                        cell1.setAttribute('id', 'na' + this.id);
+
+                        row.setAttribute('id', 'ro' + (Number(this.id) + Number(1)));
+
+                        $(cell2).click(function() {
+                            this.parentNode.remove();
+                            var numid = $(this).attr("numberid");
+
+                            for (j = 0; j < orders.length; j++) {
+                                if (Number(orders[j].roomnumber) == Number(numid)) {
+                                    orders.splice(j, 1);
+                                }
+                            }
+
+
+                            var sum = 0;
+
+                            for (j = 0; j < orders.length; j++) {
+                                var startd = orders[j].startDate;
+                                var endd = orders[j].endDate;
+
+                                var s1;
+                                s1 = new Date(startd.replace(/-/g, "/"));
+                                s2 = new Date(endd.replace(/-/g, "/"));
+                                var days = s2.getTime() - s1.getTime();
+                                var time = parseInt(days / (1000 * 60 * 60 * 24));
+
+                                sum += Number(coordinates[Number(orders[j].roomnumber) - Number(1)].cost) * Number(time);
+                            }
+
+                            $(".costInfo").text("Total cost: $" + sum);
+                        });
+
+                        cell2.innerHTML = "Delete";
+                        cell2.setAttribute('numberid', (Number(this.id) + Number(1)));
+                        $(cell2).css('font-size', "12px")
+                            .css('color', "red")
+                            .css('text-align', "center")
+                            .css('text-decoration-line', "underline");
+
+                        // var buttonPuls = document.createElement("input");
+                        // var cname = 'ch' + this.id;
+                        // buttonPuls.setAttribute('type', 'button');
+                        // buttonPuls.setAttribute('name', Number(table.rows.length) - Number(1));
+                        // buttonPuls.setAttribute('id', cname);
+                        // buttonPuls.setAttribute('value', "Del");
+                        // buttonPuls.setAttribute('onclick', 'OnUpdate(this.value, this.name)');
+                        // cell2.appendChild(buttonPuls);
+
+
+                        // $(".disorder").append("<tr><td>" + (Number(this.id) + Number(1)) +
+                        //     "<br>" + start +
+                        //     "<br>" + end + "</td><td>" + buttonPuls + "</td></tr>");                        
+                    })
+                    .hover(function(e) {
+                            var offs = 50;
+                            var id = this.id;
+                            $('<lable id="largeInfo">' + "Roomnumber: " + coordinates[id].roomnumber +
+                                    "<br> Price: $" + coordinates[id].cost +
+                                    "<br> MaxUserNumber: " + coordinates[id].umn +
+                                    "<br> Status: " + coordinates[id].status +
+                                    "<br> Type: " + coordinates[id].type +
+                                    '</label>')
+                                .css('top', e.pageY - 150)
+                                .css('left', e.pageX - 210)
+                                .css('position', "absolute")
+                                .css('background', "#ffff00")
+                                .css('border', "2px solid #000000")
+                                .css('color', "blue")
+                                .css('font-size', "0.9em")
+                                .css('font-weight', "bold")
+                                .appendTo('p');
+
+                            $('<img class="roomPreview" src="roompic/' + (Number(id) + 1) + '.jpg" alt="Preview image is not avaliable" />')
+                                .css('top', e.pageY + $("#largeInfo").height() - 150)
+                                .css('left', e.pageX - 210)
+                                // .css('width', coordinates[id].width)
+                                // .css('height', coordinates[id].height)
+                                .css('position', "absolute")
+                                .appendTo('p');
+
+
+                            if ("Available" == coordinates[id].status) {
+                                $("#" + id).attr("src", "00ff00.png");
+                            }
+
+                        },
+                        function() {
+                            $('#largeInfo').remove();
+                            $('.roomPreview').remove();
+
+                            if ("Available" == coordinates[this.id].status) {
+                                $("#" + this.id).attr("src", "Transparent.png");
+                            }
+                        });
+            }
+
+
+            $(".btnClearLocalData").click(function() {
+                localStorage.setItem("storageOrder", "");
+                localStorage.setItem("storageStartDate", "");
+                localStorage.setItem("storageEndDate", "");
+            });
+
+
+
+            $(".btnCheckout").click(function() {
+
+                var storageString = "";
+                var storageStarDate = "";
+                var storageEndDate = "";
+
+                for (j = 0; j < orders.length; j++) {
+                    $(".finishorder").append("<tr><td>roomNum: " + Number(orders[j].roomnumber) +
+                        "<br>CheckIn: " + orders[j].startDate +
+                        "<br>CheckOut: " + orders[j].endDate + "</td></tr>");
+
+
+                    coordinates[Number(orders[j].roomnumber) - Number(1)].status = "Booked";
+                    $("#" + (Number(orders[j].roomnumber) - Number(1))).attr("src", "FF0000.png")
+                        .css('border', "0px solid #ff00ff");
+
+
+                    finishorders[finishorders.length] = orders[j];
+                }
+
+                orders = [];
+                $(".disorder  tr:not(:first)").empty();
+                $(".costInfo").text("");
+
+
+                for (j = 0; j < finishorders.length; j++) {
+                    storageString += finishorders[j].roomnumber + ",";
+                    storageStarDate += finishorders[j].startDate + ",";
+                    storageEndDate += finishorders[j].endDate + ",";
+                }
+
+
+                localStorage.setItem("storageOrder", storageString);
+                localStorage.setItem("storageStartDate", storageStarDate);
+                localStorage.setItem("storageEndDate", storageEndDate);
+            });
+
+            $.ajax({
+                type: "GET",
+                url: "rooms.xml",
+                dataType: "xml",
+                success: function(roomXml) {
+                    $(roomXml).find('ROOM').each(function() {
+                        var image = $(this).find('IMAGE').text();
+                        var cost = $(this).find('COST').text();
+                        var umn = $(this).find('UMN').text();
+                        var status = $(this).find('STATUS').text();
+                        var type = $(this).find('TYPE').text();
+                        var roomnumber = $(this).find('ROOMNUMBER').text();
+
+                        coordinates[roomnumber - 1].image = image;
+                        coordinates[roomnumber - 1].cost = cost;
+                        coordinates[roomnumber - 1].umn = umn;
+                        coordinates[roomnumber - 1].status = status;
+                        coordinates[roomnumber - 1].type = type;
+                        coordinates[roomnumber - 1].roomnumber = roomnumber;
+
+                        if ("Booked" == status) {
+                            $("#" + (roomnumber - 1)).attr("src", "FF0000.png");
+                        } else {
+                            $("#" + (roomnumber - 1)).attr("src", "Transparent.png");
+                        }
+
+                        $(".disRoom").append("<tr><td>" + roomnumber +
+                            "</td><td>$" + cost +
+                            "</td><td>" + umn +
+                            // "</td><td>" + status +
+                            "</td><td>" + type + "</td></tr>");
+
+
+                        // if (0 == (roomnumber % 2)) {
+                        //     $(".disRoom").append("<tr><td>" + roomnumber +
+                        //         "\n " + cost +
+                        //         "\n " + umn +
+                        //         "\n " + status +
+                        //         "\n " + type + "</td>");
+                        // } else {
+                        //     $(".disRoom").append("<td>" + roomnumber +
+                        //         "\n " + cost +
+                        //         "\n " + umn +
+                        //         "\n " + status +
+                        //         "\n " + type + "</td></tr>");
+                        // }
+                    });
+
+
+
+                    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                    {
+                        var retrieveString = localStorage.getItem("storageOrder");
+                        var retrieveStartDate = localStorage.getItem("storageStartDate");
+                        var retrieveEndDate = localStorage.getItem("storageEndDate");
+
+                        var desString = retrieveString.split(',');
+                        var desStartDate = retrieveStartDate.split(',');
+                        var desEndDate = retrieveEndDate.split(',');
+
+                        for (j = 0; j < desString.length - 1; j++) {
+
+                            $(".finishorder").append("<tr><td>roomNum: " + Number(coordinates[Number(desString[j]) - Number(1)].roomnumber) +
+                                "<br>CheckIn: " + desStartDate[j] +
+                                "<br>CheckOut: " + desEndDate[j] + "</td></tr>");
+
+
+                            coordinates[Number(desString[j]) - Number(1)].status = "Booked";
+                            $("#" + (Number(desString[j]) - Number(1))).attr("src", "FF0000.png")
+                                .css('border', "0px solid #ff00ff");
+
+
+                            var newOrder = new order(Number(desString[j]), desStartDate[j], desEndDate[j]);
+                            // orders[orders.length] = newOrder;
+                            finishorders[finishorders.length] = newOrder;
+
+
+                            // finishorders[finishorders.length] = orders[j];
+
+                            // storageString += orders[j].roomnumber + ",";
+                        }
+
+                        // for (j = 0; j < orders.length; j++) {
+                        //     $(".finishorder").append("<tr><td>roomNum: " + Number(orders[j].roomnumber) +
+                        //         "<br>CheckIn: " + orders[j].startDate +
+                        //         "<br>CheckOut: " + orders[j].endDate + "</td></tr>");
+
+
+                        //     coordinates[Number(orders[j].roomnumber) - Number(1)].status = "Booked";
+                        //     $("#" + (Number(orders[j].roomnumber) - Number(1))).attr("src", "FF0000.png")
+                        //         .css('border', "0px solid #ff00ff");
+
+
+                        //     finishorders[finishorders.length] = orders[j];
+
+                        //     storageString += orders[j].roomnumber + ",";
+                        // }
+
+                        // orders = [];
+                        // $(".disorder  tr:not(:first)").empty();
+
+                        // localStorage.setItem("storageOrder", storageString);
+                    }
+
+                    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+                },
+
+                error: function() {
+                    alert("An error occurred while processing XML file.");
+                }
+            });
+
+
+
+
+
+
+
+            $(".onSearch").click(function() {
+                var num = $(".inputnumber").val();
+                var start = $(".starttime").val();
+                var end = $(".endtime").val();
+
+                //clear selection
+                $(".maskImg").css('border', "0px solid #ff00ff");
+
+
+                if (("" == num) || num <= 0) {
+                    alert("Please input a validate number of people!");
+                    return;
+                }
+                if (("" == start) || ("" == end)) {
+                    alert("Please input Check in time or Check out time!");
+                    return;
+                }
+
+                var d1 = new Date(start.replace(/\-/g, "\/"));
+                var d2 = new Date(end.replace(/\-/g, "\/"));
+                if (d1 >= d2) {
+                    alert("Check out Date should bigger than Check in Date!");
+                    return;
+                }
+
+                for (i = 0; i < coordinates.length; i++) {
+                    if ((Number(num) <= Number(coordinates[i].umn)) && ("Available" == coordinates[i].status)) {
+                        $("#" + i).css('border', "3px solid #ff00ff");
+                    }
+                }
+            });
+
+        });
+
+
+
+
+
+
+
+        function coordinate(l, t, r, b) {
+            this.top = t;
+            this.left = l;
+            this.width = r - l;
+            this.height = b - t;
+            var image, cost, umn, status, type, roomnumber;
+        }
+
+        var coordinates = [];
+        coordinates[0] = new coordinate(230, 371, 260, 403);
+        coordinates[1] = new coordinate(274, 310, 317, 341);
+        coordinates[2] = new coordinate(337, 353, 376, 383);
+        coordinates[3] = new coordinate(417, 346, 461, 375);
+        coordinates[4] = new coordinate(418, 247, 460, 279);
+        coordinates[5] = new coordinate(496, 246, 535, 276);
+        coordinates[6] = new coordinate(562, 246, 602, 276);
+        coordinates[7] = new coordinate(608, 196, 646, 226);
+        coordinates[8] = new coordinate(568, 141, 606, 170);
+        coordinates[9] = new coordinate(602, 86, 641, 117);
+        coordinates[10] = new coordinate(673, 55, 712, 85);
+        coordinates[11] = new coordinate(727, 106, 798, 190); //suites
+        coordinates[12] = new coordinate(646, 455, 693, 496); //seaview        
+        coordinates[13] = new coordinate(203, 434, 284, 505); //motel
+        coordinates[14] = new coordinate(409, 446, 525, 499); //office
+
+        function order(roomnum, start, end) {
+            this.roomnumber = roomnum;
+            this.startDate = start;
+            this.endDate = end;
+        }
+
+        var orders = [];
+        var finishorders = [];
+    </script>
+
+</body>
+
+</html>
